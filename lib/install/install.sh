@@ -89,6 +89,13 @@ save_remote_file () {
   path="${2}"
   auth_param="${3:-}"
 
+  local dirname="$(dirname "${path}")"
+
+  # Make sure directory exists
+  if [[ ! -d "${dirname}" ]];then
+    mkdir -p  "${dirname}"
+  fi
+
   if [[ "${auth_param}" ]];then
     curl --silent -L -o "${path}" -u "${auth_param}" "${url}"
   else
@@ -327,43 +334,37 @@ bpkg_install_from_remote () {
     name="$(
       echo -n "${json}" |
       bpkg-json -b |
-      grep 'name' |
+      grep -m 1 '"name"' |
       awk '{ $1=""; print $0 }' |
       tr -d '\"' |
       tr -d ' '
     )"
 
     ## check if forced global
-    if [[ ! -"z $(echo -n "${json}" | bpkg-json -b | grep '\["global"\]' | awk '{ print $2 }' | tr -d '"')" ]]; then
+    if [[ "$(echo -n "${json}" | bpkg-json -b | grep '\["global"\]' | awk '{ print $2 }' | tr -d '"')" == 'true' ]]; then
       needs_global=1
     fi
 
     ## construct scripts array
     {
-      scripts=$(echo -n "${json}" | bpkg-json -b | grep '\["scripts' | awk '{$1=""; print $0 }' | tr -d '"')
+      scripts=$(echo -n "${json}" | bpkg-json -b | grep '\["scripts' | awk '{ print $2 }' | tr -d '"')
+
+      ## create array by splitting on newline
       OLDIFS="${IFS}"
-
-      ## comma to space
-      IFS=','
-      scripts=("${scripts[@]}")
+      IFS=$'\n'
+      scripts=(${scripts[@]})
       IFS="${OLDIFS}"
-
-      ## account for existing space
-      scripts=("${scripts[@]}")
     }
 
     ## construct files array
     {
-      files=$(echo -n "${json}" | bpkg-json -b | grep '\["files' | awk '{$1=""; print $0 }' | tr -d '"')
+      files=$(echo -n "${json}" | bpkg-json -b | grep '\["files' | awk '{ print $2 }' | tr -d '"')
+
+      ## create array by splitting on newline
       OLDIFS="${IFS}"
-
-      ## comma to space
-      IFS=','
-      files=("${files[@]}")
+      IFS=$'\n'
+      files=(${files[@]})
       IFS="${OLDIFS}"
-
-      ## account for existing space
-      files=("${files[@]}")
     }
 
   fi
@@ -382,6 +383,15 @@ bpkg_install_from_remote () {
       build='make install'
     fi
 
+    if [ -z "$PREFIX" ]; then
+      if [ $USER == 'root' ]; then
+        PREFIX="/usr/local"
+      else
+        PREFIX="$HOME/.local"
+      fi
+      build="env PREFIX=$PREFIX $build"
+    fi
+      
     { (
       ## go to tmp dir
       cd "$( [[ ! -z "${TMPDIR}" ]] && echo "${TMPDIR}" || echo /tmp)" &&
@@ -393,6 +403,7 @@ bpkg_install_from_remote () {
         (
       ## move into directory
       cd "${name}-${version}" &&
+      git checkout ${version} &&
         ## build
       info "Performing install: \`${build}'"
       build_output=$(eval "${build}")
@@ -413,17 +424,20 @@ bpkg_install_from_remote () {
     mkdir -p "${cwd}/deps/bin"
 
     # install package dependencies
+    info "Install dependencies for ${name}"
     (cd "${cwd}/deps/${name}" && bpkg getdeps)
 
     ## grab each script and place in deps directory
-    for script in $scripts; do
+    for script in "${scripts[@]}"; do
       (
-        local script="$(echo $script | xargs basename )"
         if [[ "${script}" ]];then
+          local scriptname="$(echo "${script}" | xargs basename )"
+
           info "fetch" "${url}/${script}"
           info "write" "${cwd}/deps/${name}/${script}"
           save_remote_file "${url}/${script}" "${cwd}/deps/${name}/${script}" "${auth_param}"
-          local scriptname="${script%.*}"
+
+          scriptname="${scriptname%.*}"
           info "${scriptname} to PATH" "${cwd}/deps/bin/${scriptname}"
           ln -si "${cwd}/deps/${name}/${script}" "${cwd}/deps/bin/${scriptname}"
           chmod u+x "${cwd}/deps/bin/${scriptname}"
@@ -432,18 +446,15 @@ bpkg_install_from_remote () {
     done
 
     if [[ "${#files[@]}" -gt '0' ]]; then
-      ## grab each file
-      for (( i = 0; i < ${#files[@]} ; ++i )); do
-        (
-          local file="${files[$i]}"
+      ## grab each file and place in correct directory
+      for file in "${files[@]}"; do
+      (
           if [[ "${file}" ]];then
-            local filedir="$(dirname "${cwd}/deps/${name}/${file}")"
+            local filename="$(echo "${file}" | xargs basename )"
+
             info "fetch" "${url}/${file}"
-            if [[ ! -d "${filedir}" ]]; then
-              mkdir -p "${filedir}"
-            fi
-            info "write" "${filedir}/${file}"
-            save_remote_file "${url}/${script}" "${filedir}/${file}" "${auth_param}"
+            info "write" "${cwd}/deps/${name}/${file}"
+            save_remote_file "${url}/${file}" "${cwd}/deps/${name}/${file}" "${auth_param}"
           fi
         )
       done

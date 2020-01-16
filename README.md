@@ -1,4 +1,4 @@
-# bpkg [![Build Status](https://travis-ci.org/bpkg/bpkg.svg?branch=master)](https://travis-ci.org/bpkg/bpkg)
+# bpkg [![Build Status](https://travis-ci.org/bpkg/bpkg.svg?branch=master)](https://travis-ci.org/bpkg/bpkg) [![Backers on Open Collective](https://opencollective.com/bpkg/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/bpkg/sponsors/badge.svg)](#sponsors) 
 
 _JavaScript has npm, Ruby has Gems, Python has pip and now Shell has bpkg!_
 
@@ -67,15 +67,9 @@ To directly install `bpkg` from its source code you have to clone its repository
 ```sh
 $ git clone https://github.com/bpkg/bpkg.git
 $ cd bpkg
-$ ./setup.sh
-```
-
-Or in a directory with user write permission, like `$HOME/opt/bin`
-
-```sh
-$ git clone https://github.com/bpkg/bpkg.git
-$ cd bpkg
-$ PREFIX=$HOME/opt ./setup.sh
+$ ./setup.sh                             # Will install bpkg in $HOME/.local/bin
+$ sudo ./setup.sh                        # Will install bpkg in /usr/local/bin.
+$ PREFIX=/my/custom/directory ./setup.sh # Will install bpkg in a custom directory.
 ```
 
 ## Usage
@@ -84,9 +78,10 @@ You use `bpkg` by simply sending commands, pretty much like `npm` or `pip`.
 
 ### Installing packages
 
-Packages can either be global (on `/usr/local/bin`) or local (under `./deps`).
+Packages can either be global (on `/usr/local/bin` if installed as root or
+ `$HOME/.local/bin` otherwize) or local (under `./deps`).
 
-For example, here's a **global install** of the [term package][term]:
+For example, here's a **global install for the current user** of the [term package][term]:
 
 ```sh
 $ bpkg install term -g
@@ -281,6 +276,34 @@ $ my_script some more args --blah
 
 * [@littlstar](https://github.com/littlstar) ([littlstar.com](https://littlstar.com))
 * [@spotify](https://github.com/spotify) ([spotify.com](https://spotify.com))
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/bpkg#sponsor)]
+
+<a href="https://opencollective.com/bpkg/sponsor/0/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/1/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/2/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/3/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/4/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/5/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/6/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/7/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/8/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/bpkg/sponsor/9/website" target="_blank"><img src="https://opencollective.com/bpkg/sponsor/9/avatar.svg"></a>
+
+
+### Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="graphs/contributors"><img src="https://opencollective.com/bpkg/contributors.svg?width=890&button=false" /></a>
+
+
+### Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/bpkg#backer)]
+
+<a href="https://opencollective.com/bpkg#backers" target="_blank"><img src="https://opencollective.com/bpkg/backers.svg?width=890"></a>
+
+
 
 ## License
 
