@@ -43,13 +43,13 @@ setup () {
   ## build
   {
     echo
-    cd "${TMPDIR}"
+    cd "${TMPDIR}" || return 1
     echo "  info: Creating temporary files..."
     test -d "${DEST}" && { echo "  warn: Already exists: '${DEST}'"; }
     rm -rf "${DEST}"
     echo "  info: Fetching latest 'bpkg'..."
     git clone --depth=1 "${REMOTE}" "${DEST}" > /dev/null 2>&1
-    cd "${DEST}"
+    cd "${DEST}" || return 1
     echo "  info: Installing..."
     echo
     make_install
@@ -61,7 +61,7 @@ setup () {
 ## make targets
 BIN="bpkg"
 if [ -z "$PREFIX" ]; then
-  if [ $USER == 'root' ]; then
+  if [ "$USER" == 'root' ]; then
     PREFIX="/usr/local"
   else
     PREFIX="$HOME/.local"
@@ -75,11 +75,20 @@ make_install () {
   make_uninstall
   echo "  info: Installing $PREFIX/bin/$BIN..."
   install -d "$PREFIX/bin"
-  local source=$(<$BIN)
-  [ -f "$source" ] && install "$source" "$PREFIX/bin/$BIN" || install "$BIN" "$PREFIX/bin"
+  src="$(<$BIN)"
+  local src
+  if [ -f "$src" ] ; then
+    install "$src" "$PREFIX/bin/$BIN"
+  else
+    install "$BIN" "$PREFIX/bin"
+  fi
   for cmd in $CMDS; do
-    source=$(<$BIN-$cmd)
-    [ -f "$source" ] && install "$source" "$PREFIX/bin/$BIN-$cmd" || install "$BIN-$cmd" "$PREFIX/bin"
+    src=$(<$BIN-"$cmd")
+    if [ -f "$src" ] ; then
+      install "$src" "$PREFIX/bin/$BIN-$cmd"
+    else
+      install "$BIN-$cmd" "$PREFIX/bin"
+    fi
   done
   return $?
 }
@@ -108,5 +117,9 @@ make_unlink () {
 }
 
 ## go
-[ $# -eq 0 ] && setup || make_$1
+if [ $# -eq 0 ] ; then
+  setup
+else
+  make_"$1"
+fi
 exit $?
